@@ -17,24 +17,104 @@ package  {
 		private var a_axis:Sprite; 	//Спрайт с осями
 		private var a_greed:Sprite; //Спрайт с сеткой
 		private var a_curve:Array; 	//Массив спрайтов с графиками
-		
+		private var a_back:Sprite=new Sprite(); //Спрайт с фоном
 		
 		const AXIS_LOG:String = 'axis_logarithmic';	//Константа для логарифмической оси
 		const AXIS_LIN:String = 'axis_linear';		//Константа для линейной оси
 		
 		//Конструктор.
-		//aheight - высота в пикселях(по умолчанию 100); 
-		//awidht - ширина в пикселях (по умолчанию 100);
+		//height - высота в пикселях(по умолчанию 100); 
+		//widht - ширина в пикселях (по умолчанию 100);
 		//greed_type - тип сетки (по умолчанию линейная);
-		//scale - масштаб графика (по умолчанию 10:1 px/единицу графика);
-		public function AGraph(aheight:Number=100,awidth:Number=100,greed_type:String=AXIS_LIN,scale:Number=10) {
-			trace(arguments);
-			trace(aheight,awidth,greed_type);
+		//scale - масштаб сетки (по умолчанию 10:1 px/единицу графика);
+		//hmin, hmax, wmin, wmax - Минимальныие и максимальные значение по осям соответственно
+		public function AGraph(	height:Number=400,
+								width:Number=400,
+								greed_type:String=AXIS_LOG,
+								scale:Number=100,
+								hmin:Number=0,
+								hmax:Number=100,
+								wmin:Number=0,
+								wmax:Number=100) {
+			aheight=height;
+			awidth=width;
+			ahmin=hmin;
+			ahmax=hmax;
+			awmin=wmin;
+			awmax=wmax;
+			
+			//ToDo построение фона---
+			a_back.graphics.lineStyle(0,0x000000);
+			a_back.graphics.beginFill(0xFFFFFF);
+			a_back.graphics.drawRect(0,0,awidth,aheight);
+			a_back.graphics.endFill();
+			addChild(a_back);
+			// end ToDo---
+			
+			//вызов сетки.
+			agreed(greed_type,scale,scale);
+			
 		}
 		
-		//Отрисовка сетки
-		private function agreed(){
+		//Отрисовка сетки gtype - тип сетки, scalx, scaly - горизонтальный и вертикальный масштаб.
+		private function agreed(gtype:String,scalx:Number,scaly:Number){
+
+			a_greed=new Sprite();
+			addChild(a_greed);
+			//Функция рисовки линейной сетки scaleX, scaleY горизонтальный и вертикальный масштаб
+			function alingreeg(scaleX:Number,scaleY:Number){ 
+				//ToDo: Сделать диалог настроки стиля
+				a_greed.graphics.lineStyle(1,0x000000); //Стиль линии 
+				a_greed.graphics.beginFill(0x00FF00);
+				if(scaleX>0){	//Если 0 то вертикальные линии не строить			
+					for (var i :Number=0;i<=aheight;i+=scaleX){ //рисовка вертикальных линий сетки с интервалом scaleX
+						a_greed.graphics.moveTo(i,0);
+						a_greed.graphics.lineTo(i,aheight);
+					}
+				}
+				if(scaleY>0){ //если 0 то горизонтальные линии не строить
+					for (i=0;i<=awidth;i+=scaleY){ //рисовка горизонтальных линий сетки c интервалом scaleY
+						a_greed.graphics.moveTo(0,i);
+						a_greed.graphics.lineTo(awidth,i);
+					}
+				}
+				a_greed.graphics.endFill();
+			}
 			
+			//Фуркция рисовки логарифмической сетки. ScaleX, scaleY масштаб пикселей/декаду
+			/// ToDo Сделать маскирование выходящих линий логарифмической сетки
+			function aloggreeg(scaleX:Number,scaleY:Number){
+				//Вычисляет десятичный логарифм числа х
+				function lg(x:Number):Number{
+					return Math.log(x)/Math.log(10);
+				}
+				
+				var current_value:Number=0;
+				a_greed.graphics.lineStyle(0.1,0x999999); //Стиль линии 
+				a_greed.graphics.beginFill(0x00FF00);
+				for(var i:Number=0;i<=aheight/scaleX;i++){ //Вертикальные линии
+					for (var j :Number=1;j<11;j++){
+						a_greed.graphics.moveTo(current_value+scaleX*lg(j),0);
+						a_greed.graphics.lineTo(current_value+scaleX*lg(j),aheight);
+					}
+					current_value=current_value+scaleX*lg(j-1);
+				}
+				current_value=0;
+				for (i=0;i<=awidth/scaleY;i++){ //горизонтальные линии
+					for (j=1;j<11;j++){
+						a_greed.graphics.moveTo(0,aheight-(current_value+scaleY*lg(j)));
+						a_greed.graphics.lineTo(awidth,aheight-(current_value+scaleY*lg(j)));
+					}
+					current_value=current_value+scaleY*lg(j-1);
+				}
+				a_greed.graphics.endFill();
+			} 
+			
+			//Выбор метода отрисовки сетки
+			switch (gtype){
+			case AXIS_LIN: alingreeg(scalx,scaly); break;
+			case AXIS_LOG: aloggreeg(scalx,scaly); break;
+			}
 		}
 		
 		//Отрисовка осей

@@ -10,6 +10,7 @@
 		public function axes() {
 			// constructor code
 			g=new AGraph();
+			addChild(g);
 		}
 		
 	}
