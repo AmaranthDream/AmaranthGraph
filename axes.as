@@ -11,6 +11,8 @@
 			// constructor code
 			g=new AGraph();
 			addChild(g);
+			g.x=10;
+			g.y=10;
 		}
 		
 	}
